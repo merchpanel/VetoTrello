@@ -1,12 +1,8 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
-import reviewRouter from "./routes/review.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { join } from "path";
+import reviewRouter from "./routes/review";
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 3000);

@@ -2,7 +2,6 @@
   "name": "vetocheck",
   "version": "1.0.0",
   "description": "Trello Power-Up that AI-reviews thumbnail designs via GPT-4o Vision",
-  "type": "module",
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
@@ -15,7 +14,6 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-rate-limit": "^7.3.1",
-    "node-fetch": "^3.3.2",
     "openai": "^4.52.0"
   },
   "devDependencies": {

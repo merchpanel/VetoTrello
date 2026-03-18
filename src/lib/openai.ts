@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { SYSTEM_PROMPT, buildUserMessage } from "./prompts.js";
+import { SYSTEM_PROMPT, buildUserMessage } from "./prompts";
 
 export interface CategoryResult {
   score: number;

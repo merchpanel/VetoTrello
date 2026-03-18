@@ -1,5 +1,3 @@
-import fetch from "node-fetch";
-
 const TRELLO_BASE = "https://api.trello.com/1";
 
 function apiKey(): string {

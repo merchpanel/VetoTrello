@@ -1,4 +1,4 @@
-import type { ReviewResult } from "./openai.js";
+import type { ReviewResult } from "./openai";
 
 function scoreBar(score: number): string {
   const filled = Math.round(score);

@@ -6,9 +6,9 @@ import {
   filterImageAttachments,
   downloadAttachmentAsBase64,
   postComment,
-} from "../lib/trello.js";
-import { reviewDesign } from "../lib/openai.js";
-import { formatReviewComment } from "../lib/formatter.js";
+} from "../lib/trello";
+import { reviewDesign } from "../lib/openai";
+import { formatReviewComment } from "../lib/formatter";
 
 const router = Router();
 
