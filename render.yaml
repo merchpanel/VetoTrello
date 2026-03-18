@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: vetocheck
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: node dist/server.js
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRELLO_API_KEY
+        sync: false
+      - key: TRELLO_SECRET
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: REVIEW_PASS_THRESHOLD
+        value: "6.0"
+      - key: MAX_IMAGE_SIZE_MB
+        value: "10"
+      - key: PORT
+        value: "3000"

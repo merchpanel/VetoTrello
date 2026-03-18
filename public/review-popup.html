@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VetoCheck</title>
+    <script src="https://p.trellocdn.com/power-up.min.js"></script>
+    <style>
+      :root {
+        --green: #61bd4f;
+        --red: #eb5a46;
+        --blue: #0079bf;
+        --text: #172b4d;
+        --muted: #6b778c;
+        --bg: #f4f5f7;
+        --radius: 8px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        padding: 20px;
+        min-height: 280px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 380px;
+      }
+
+      /* ── Idle State ─────────────────────────────── */
+      #state-idle {
+        text-align: center;
+      }
+
+      .logo {
+        font-size: 28px;
+        margin-bottom: 6px;
+      }
+
+      .title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      .subtitle {
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 20px;
+        line-height: 1.4;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 22px;
+        border-radius: var(--radius);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: opacity 0.15s;
+      }
+
+      .btn:hover {
+        opacity: 0.88;
+      }
+
+      .btn-primary {
+        background: var(--blue);
+        color: #fff;
+        width: 100%;
+        justify-content: center;
+      }
+
+      .btn-secondary {
+        background: transparent;
+        color: var(--muted);
+        text-decoration: underline;
+        font-size: 12px;
+        padding: 6px 0;
+      }
+
+      /* ── Loading State ──────────────────────────── */
+      #state-loading {
+        text-align: center;
+        display: none;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #dfe1e6;
+        border-top-color: var(--blue);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 16px;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .loading-steps {
+        list-style: none;
+        text-align: left;
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 12px;
+      }
+
+      .loading-steps li {
+        padding: 3px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .step-icon {
+        font-size: 14px;
+        width: 18px;
+        text-align: center;
+      }
+
+      .step-active {
+        color: var(--blue);
+        font-weight: 600;
+      }
+
+      .step-done {
+        color: var(--green);
+      }
+
+      /* ── Result State ───────────────────────────── */
+      #state-result {
+        display: none;
+      }
+
+      .result-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .score-circle {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 800;
+        color: #fff;
+        flex-shrink: 0;
+      }
+
+      .score-circle.pass {
+        background: var(--green);
+      }
+      .score-circle.fail {
+        background: var(--red);
+      }
+
+      .result-meta {
+        flex: 1;
+      }
+
+      .result-verdict {
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .result-verdict.pass {
+        color: var(--green);
+      }
+      .result-verdict.fail {
+        color: var(--red);
+      }
+
+      .result-msg {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+
+      .result-info {
+        background: #fff;
+        border-radius: var(--radius);
+        padding: 12px 14px;
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 14px;
+        line-height: 1.5;
+      }
+
+      /* ── Error State ────────────────────────────── */
+      #state-error {
+        display: none;
+        text-align: center;
+      }
+
+      .error-icon {
+        font-size: 36px;
+        margin-bottom: 10px;
+      }
+
+      .error-msg {
+        font-size: 13px;
+        color: var(--red);
+        background: #fdf2f0;
+        border-radius: var(--radius);
+        padding: 12px;
+        margin-bottom: 14px;
+        text-align: left;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Idle -->
+      <div id="state-idle">
+        <div class="logo">🎨</div>
+        <div class="title">VetoCheck</div>
+        <div class="subtitle">
+          AI-powered thumbnail review<br />
+          Reads the card description as the brief + analyses the latest image attachment.
+        </div>
+        <button class="btn btn-primary" id="btn-run">⚡ Run Review</button>
+      </div>
+
+      <!-- Loading -->
+      <div id="state-loading">
+        <div class="spinner"></div>
+        <div class="title" style="margin-bottom:8px">Analysing design…</div>
+        <ul class="loading-steps" id="loading-steps">
+          <li id="step-fetch"><span class="step-icon">⏳</span> Fetching card &amp; attachments</li>
+          <li id="step-ai"><span class="step-icon">⏳</span> GPT-4o Vision review (multi-pass)</li>
+          <li id="step-comment"><span class="step-icon">⏳</span> Posting feedback to card</li>
+        </ul>
+      </div>
+
+      <!-- Result -->
+      <div id="state-result">
+        <div class="result-header">
+          <div class="score-circle" id="score-circle">–</div>
+          <div class="result-meta">
+            <div class="result-verdict" id="result-verdict">–</div>
+            <div class="result-msg" id="result-msg">–</div>
+          </div>
+        </div>
+        <div class="result-info" id="result-info"></div>
+        <button class="btn btn-primary" id="btn-close">Close</button>
+      </div>
+
+      <!-- Error -->
+      <div id="state-error">
+        <div class="error-icon">⚠️</div>
+        <div class="title" style="margin-bottom:10px">Review Failed</div>
+        <div class="error-msg" id="error-msg"></div>
+        <button class="btn btn-primary" id="btn-retry">Try Again</button>
+      </div>
+    </div>
+
+    <script>
+      /* global TrelloPowerUp */
+      const t = TrelloPowerUp.iframe();
+
+      const BASE_URL = window.location.origin;
+
+      // State elements
+      const states = {
+        idle: document.getElementById("state-idle"),
+        loading: document.getElementById("state-loading"),
+        result: document.getElementById("state-result"),
+        error: document.getElementById("state-error"),
+      };
+
+      function showState(name) {
+        Object.entries(states).forEach(([key, el]) => {
+          el.style.display = key === name ? "block" : "none";
+        });
+        t.sizeTo(document.body).catch(() => {});
+      }
+
+      function setStep(id, status) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const icon = el.querySelector(".step-icon");
+        el.className = "";
+        if (status === "active") {
+          el.classList.add("step-active");
+          icon.textContent = "⟳";
+        } else if (status === "done") {
+          el.classList.add("step-done");
+          icon.textContent = "✅";
+        } else if (status === "error") {
+          icon.textContent = "❌";
+        }
+      }
+
+      async function runReview() {
+        showState("loading");
+
+        let token;
+        try {
+          // Request Trello REST API token (user will be prompted to authorise if needed)
+          token = await t.getRestApi().getToken();
+        } catch (err) {
+          showError("Could not obtain Trello authorisation token. Please re-authorise the Power-Up.");
+          return;
+        }
+
+        const card = await t.card("id");
+        const cardId = card.id;
+
+        setStep("step-fetch", "active");
+
+        let result;
+        try {
+          setStep("step-fetch", "active");
+
+          const res = await fetch(`${BASE_URL}/api/review`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ cardId, token }),
+          });
+
+          setStep("step-fetch", "done");
+          setStep("step-ai", "active");
+
+          // The server runs the full pipeline synchronously; when we get a response
+          // the AI pass is done and the comment is posted.
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({ error: res.statusText }));
+            throw new Error(data.error || `Server error ${res.status}`);
+          }
+
+          setStep("step-ai", "done");
+          setStep("step-comment", "active");
+
+          result = await res.json();
+
+          setStep("step-comment", "done");
+        } catch (err) {
+          showError(err instanceof Error ? err.message : String(err));
+          return;
+        }
+
+        // Store badge data in card plugin data
+        try {
+          await t.set("card", "shared", "lastReview", {
+            score: result.score,
+            verdict: result.verdict,
+            ts: Date.now(),
+          });
+        } catch (_) {
+          // Non-fatal — badge just won't update
+        }
+
+        showResult(result);
+      }
+
+      function showResult(result) {
+        const circle = document.getElementById("score-circle");
+        const verdictEl = document.getElementById("result-verdict");
+        const msgEl = document.getElementById("result-msg");
+        const infoEl = document.getElementById("result-info");
+        const cls = result.verdict === "PASS" ? "pass" : "fail";
+
+        circle.textContent = result.score.toFixed(1);
+        circle.className = `score-circle ${cls}`;
+
+        verdictEl.textContent = `${result.verdict} ${result.verdict === "PASS" ? "✅" : "❌"}`;
+        verdictEl.className = `result-verdict ${cls}`;
+
+        msgEl.textContent = `Score: ${result.score}/10`;
+
+        infoEl.textContent = `Feedback posted as a comment on this card. Check the card activity to see the full breakdown.`;
+
+        showState("result");
+      }
+
+      function showError(msg) {
+        document.getElementById("error-msg").textContent = msg;
+        showState("error");
+      }
+
+      // Wire up buttons
+      document.getElementById("btn-run").addEventListener("click", runReview);
+      document.getElementById("btn-close").addEventListener("click", () => t.closePopup());
+      document.getElementById("btn-retry").addEventListener("click", runReview);
+
+      // Initial state
+      showState("idle");
+    </script>
+  </body>
+</html>
