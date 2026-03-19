@@ -6,7 +6,8 @@ const BASE_URL = window.location.origin;
 
 const REVIEW_POPUP_URL = `${BASE_URL}/review-popup.html`;
 
-TrelloPowerUp.initialize({
+TrelloPowerUp.initialize(
+  {
   // ─── Card Buttons ────────────────────────────────────────────────────────────
   "card-buttons": function (t) {
     return [
@@ -77,4 +78,9 @@ TrelloPowerUp.initialize({
         return [];
       });
   },
-});
+  },
+  {
+    appKey: "bcaf7c033defa4c9a5eae1bd519cf6dd",
+    appName: "VetoCheck",
+  }
+);
