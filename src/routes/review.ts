@@ -35,14 +35,15 @@ router.post(
   "/",
   reviewLimiter,
   async (req: Request, res: Response): Promise<void> => {
-    const { cardId, token } = req.body as ReviewRequest;
+    const { cardId, token: userToken } = req.body as ReviewRequest;
+    const token = userToken || process.env.TRELLO_TOKEN;
 
     if (!cardId || typeof cardId !== "string") {
       res.status(400).json({ error: "cardId is required" });
       return;
     }
-    if (!token || typeof token !== "string") {
-      res.status(400).json({ error: "token is required" });
+    if (!token) {
+      res.status(401).json({ error: "No Trello token available. Set TRELLO_TOKEN env var." });
       return;
     }
 

@@ -317,14 +317,8 @@
       async function runReview() {
         showState("loading");
 
-        let token;
-        try {
-          // Request Trello REST API token (user will be prompted to authorise if needed)
-          token = await t.getRestApi().getToken();
-        } catch (err) {
-          showError("Could not obtain Trello authorisation token. Please re-authorise the Power-Up.");
-          return;
-        }
+        // Token is handled server-side via TRELLO_TOKEN env var
+        const token = "";
 
         const card = await t.card("id");
         const cardId = card.id;
