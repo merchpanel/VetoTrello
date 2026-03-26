@@ -35,6 +35,22 @@ app.get("/health", (_req, res) => {
 // API routes
 app.use("/api/review", reviewRouter);
 
+// List image attachments for a card
+app.get("/api/attachments", async (req, res) => {
+  const { cardId } = req.query as { cardId?: string };
+  if (!cardId) { res.status(400).json({ error: "cardId is required" }); return; }
+  const token = process.env.TRELLO_TOKEN;
+  if (!token) { res.status(401).json({ error: "No TRELLO_TOKEN set" }); return; }
+  try {
+    const { getAttachments, filterImageAttachments } = await import("./lib/trello");
+    const all = await getAttachments(cardId, token);
+    const images = filterImageAttachments(all).map(a => ({ id: a.id, name: a.name }));
+    res.json(images);
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : "Unknown error" });
+  }
+});
+
 // Serve Power-Up static files last (catch-all)
 const publicDir = join(__dirname, "..", "public");
 app.use(express.static(publicDir));

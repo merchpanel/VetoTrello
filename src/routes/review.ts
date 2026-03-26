@@ -29,13 +29,14 @@ const reviewLimiter = rateLimit({
 interface ReviewRequest {
   cardId: string;
   token: string;
+  attachmentId?: string;
 }
 
 router.post(
   "/",
   reviewLimiter,
   async (req: Request, res: Response): Promise<void> => {
-    const { cardId, token: userToken } = req.body as ReviewRequest;
+    const { cardId, token: userToken, attachmentId } = req.body as ReviewRequest;
     const token = userToken || process.env.TRELLO_TOKEN;
 
     if (!cardId || typeof cardId !== "string") {
@@ -72,8 +73,10 @@ router.post(
         return;
       }
 
-      // 4. Download latest image
-      const latest = imageAttachments[0];
+      // 4. Pick requested or latest image
+      const latest = attachmentId
+        ? (imageAttachments.find((a) => a.id === attachmentId) ?? imageAttachments[0])
+        : imageAttachments[0];
       const { base64, mimeType } = await downloadAttachmentAsBase64(latest, token);
 
       // 5. GPT-4o Vision review

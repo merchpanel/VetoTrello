@@ -93,6 +93,52 @@
         padding: 6px 0;
       }
 
+      /* ── Select State ───────────────────────────── */
+      #state-select {
+        display: none;
+      }
+
+      .select-title {
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      .select-subtitle {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 14px;
+      }
+
+      .attachment-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .attachment-btn {
+        width: 100%;
+        text-align: left;
+        padding: 10px 14px;
+        background: #fff;
+        border: 1px solid #dfe1e6;
+        border-radius: var(--radius);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: border-color 0.15s, background 0.15s;
+      }
+
+      .attachment-btn:hover {
+        border-color: var(--blue);
+        background: #e9f2ff;
+      }
+
       /* ── Loading State ──────────────────────────── */
       #state-loading {
         text-align: center;
@@ -233,6 +279,13 @@
   </head>
   <body>
     <div class="container">
+      <!-- Select -->
+      <div id="state-select">
+        <div class="select-title">Select a design to review</div>
+        <div class="select-subtitle">Choose an image attachment from this card</div>
+        <ul class="attachment-list" id="attachment-list"></ul>
+      </div>
+
       <!-- Idle -->
       <div id="state-idle">
         <div class="logo">🎨</div>
@@ -285,6 +338,7 @@
 
       // State elements
       const states = {
+        select: document.getElementById("state-select"),
         idle: document.getElementById("state-idle"),
         loading: document.getElementById("state-loading"),
         result: document.getElementById("state-result"),
@@ -314,14 +368,51 @@
         }
       }
 
-      async function runReview() {
+      async function loadAttachments() {
         showState("loading");
-
-        // Token is handled server-side via TRELLO_TOKEN env var
-        const token = "";
-
         const card = await t.card("id");
         const cardId = card.id;
+
+        let images;
+        try {
+          const res = await fetch(`${BASE_URL}/api/attachments?cardId=${cardId}`);
+          if (!res.ok) throw new Error("Failed to load attachments");
+          images = await res.json();
+        } catch (err) {
+          showError(err instanceof Error ? err.message : String(err));
+          return;
+        }
+
+        if (!images || images.length === 0) {
+          showError("No image attachments found on this card. Upload a thumbnail image first.");
+          return;
+        }
+
+        if (images.length === 1) {
+          // Only one image — skip selection, go straight to review
+          runReview(cardId, images[0].id);
+          return;
+        }
+
+        // Show selection list
+        const list = document.getElementById("attachment-list");
+        list.innerHTML = "";
+        images.forEach((img) => {
+          const li = document.createElement("li");
+          const btn = document.createElement("button");
+          btn.className = "attachment-btn";
+          btn.innerHTML = `🖼️ ${img.name}`;
+          btn.addEventListener("click", () => runReview(cardId, img.id));
+          li.appendChild(btn);
+          list.appendChild(li);
+        });
+
+        showState("select");
+      }
+
+      async function runReview(cardId, attachmentId) {
+        showState("loading");
+        const token = "";
 
         setStep("step-fetch", "active");
 
@@ -332,7 +423,7 @@
           const res = await fetch(`${BASE_URL}/api/review`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ cardId, token }),
+            body: JSON.stringify({ cardId, token, attachmentId }),
           });
 
           setStep("step-fetch", "done");
@@ -396,9 +487,9 @@
       }
 
       // Wire up buttons
-      document.getElementById("btn-run").addEventListener("click", runReview);
+      document.getElementById("btn-run").addEventListener("click", loadAttachments);
       document.getElementById("btn-close").addEventListener("click", () => t.closePopup());
-      document.getElementById("btn-retry").addEventListener("click", runReview);
+      document.getElementById("btn-retry").addEventListener("click", loadAttachments);
 
       // Initial state
       showState("idle");
